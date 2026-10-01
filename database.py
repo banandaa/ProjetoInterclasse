@@ -2,13 +2,11 @@ import os
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, scoped_session
 
-
 engine = create_engine("mysql+pymysql://root:senaisp@localhost:3306/interclasse_db")
 
 db_session = scoped_session (sessionmaker(bind=engine))
 
 Base = declarative_base()
-
 
 class Time(Base):
     __tablename__ = "times"
