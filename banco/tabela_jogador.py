@@ -1,13 +1,24 @@
 from flask import flash
-from sqlalchemy import select
+from sqlalchemy import select, func
 
-from database import Jogador, db_session
+from database import Jogador, db_session, Time
+
 
 def select_todos_jogadores():
 
-    jogadores_sql = select(Jogador)
-    jogadores = db_session.execute(jogadores_sql).scalars().all()
+    # join(tabela que eu quero juntar, condição = chave estrangeira igual chave primária )
+
+    jogadores_sql = select(Jogador, Time).join(Time, Jogador.time_id == Time.id)
+    #usar scalars quando tiver somente uma tabela
+    jogadores = db_session.execute(jogadores_sql).all()
     return jogadores
+
+def select_quantidade_total():
+    jogadores_sql = select(func.count(Jogador.id))
+    qtd_total = db_session.execute(jogadores_sql).scalar()
+    return qtd_total
+
+print(select_quantidade_total())
 
 def salvar(nome, numero_camisa, posicao, time_id):
     try:
@@ -25,3 +36,4 @@ def salvar(nome, numero_camisa, posicao, time_id):
         db_session.rollback()
         flash('Erro inesperado', 'error')
         print(f'Erro: {e}')
+
