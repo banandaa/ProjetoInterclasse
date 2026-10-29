@@ -60,13 +60,51 @@ def novo_jogador():
 
         # 3- Salvar no banco
 
-        tabela_jogador.salvar(nome=nome, numero_camisa=numero_camisa, posicao=posicao, time_id=time_id)
+        tabela_jogador.salvar(nome=nome, numero_camisa=numero_camisa, posicao=posicao, time_id=time_id, )
 
 
     times = tabela_time.select_todos_times()
     jogadores = tabela_jogador.select_todos_jogadores()
 
     return render_template("jogadores.html", jogadores=jogadores, times=times)
+
+@app.route("/jogadores/<id_jogador>", methods=["GET", "POST"])
+def editar_jogador(id_jogador):
+    #buscar o jogador no banco
+    jogador = tabela_jogador.select_um(id_jogador)
+
+    # salvar as alterações
+    if request.method == "POST":
+        # 1- Pegar os valores do Form
+        nome = request.form.get("nome").strip()
+        numero_camisa = request.form.get("numero_camisa") or None
+        posicao = request.form.get("posicao").strip()
+        time_id = request.form.get("time_id") or None
+
+        # 2- Verificar se foi digitado
+        if not nome:
+            flash('Preencha o nome do jogador', 'error')
+
+        elif not numero_camisa:
+            flash('Preencha o número de camisa', 'error')
+
+        elif not posicao:
+            flash('Preencha a posicao do jogador', 'error')
+
+        elif not time_id:
+            flash('Preencha o time do jogador', 'error')
+        else:
+            jogador.nome = nome
+            jogador.numero_camisa = numero_camisa
+            jogador.posicao = posicao
+            jogador.time_id = int(time_id)
+            db_session.commit()
+
+    # carregar as informações
+    jogadores = tabela_jogador.select_todos_jogadores()
+    times = tabela_time.select_todos_times()
+    return render_template("jogadores.html", jogadores=jogadores, editar=jogador, times=times)
+
 
 @app.route("/times")
 def listar_times():
