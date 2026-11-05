@@ -208,6 +208,25 @@ def nova_partida():
     partidas = tabela_partida.select_todas_partidas()
     return render_template("partidas.html", partidas=partidas, times=times)
 
+@app.route("/movimentacao/nova", methods=["GET", "POST"])
+def nova_movimentacao():
+    if request.method == "POST":
+        #1- pegar informações no formulário
+        jogador_id = request.form.get("jogador_id")
+        time_destino_id = request.form.get("time_destino_id")
+
+        #2- verificar as informações selecionadas
+        if not jogador_id:
+            flash("Selecione o jogador", "error")
+            return redirect(url_for("nova_movimentacao"))
+        if not time_destino_id:
+            flash("Selecione o time de de destino", "error")
+            return redirect(url_for("nova_movimentacao"))
+
+        #3- Salvar no banco
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
