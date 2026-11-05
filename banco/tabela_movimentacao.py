@@ -48,7 +48,7 @@ def salvar(jogador, time_destino):
 
        movimentacao_nova = Movimentacao(
            jogador_id = int(jogador),
-           time_origem_id = time_origem ,
+           time_origem_id = time_origem_id ,
            time_destino_id = int(time_destino) ,
            data_movimentacao = data_atual
        )
@@ -57,6 +57,10 @@ def salvar(jogador, time_destino):
        flash("Movimentação realizada com sucesso!", "success")
 
     except SQLAlchemyError as e:
+        print(e)
+        db_session.rollback()
+        flash("Ocorreu um erro, tente novamente!", "error")
+    except Exception as e:
         print(e)
         db_session.rollback()
         flash("Ocorreu um erro, tente novamente!", "error")

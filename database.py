@@ -49,7 +49,7 @@ class Partida(Base):
     gols_casa = Column(Integer, default=0)
     data_partida = Column(Date)
 
-class Movimentacao:
+class Movimentacao(Base):
     __tablename__ = "movimentacoes"
     id = Column(Integer, primary_key=True, autoincrement=True)
     jogador_id = Column(Integer, ForeignKey("jogadores.id", ondelete="SET NULL"))

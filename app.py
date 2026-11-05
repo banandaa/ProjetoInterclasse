@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, g
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from banco import tabela_time, tabela_jogador, tabela_partida
+from banco import tabela_time, tabela_jogador, tabela_partida, tabela_movimentacao
 from database import *
 from datetime import date
 
@@ -208,8 +208,9 @@ def nova_partida():
     partidas = tabela_partida.select_todas_partidas()
     return render_template("partidas.html", partidas=partidas, times=times)
 
+@app.route("/movimentacao/nova/<int:jogador_id>")
 @app.route("/movimentacao/nova", methods=["GET", "POST"])
-def nova_movimentacao():
+def nova_movimentacao(jogador_id=None):
     if request.method == "POST":
         #1- pegar informações no formulário
         jogador_id = request.form.get("jogador_id")
@@ -224,7 +225,15 @@ def nova_movimentacao():
             return redirect(url_for("nova_movimentacao"))
 
         #3- Salvar no banco
+        tabela_movimentacao.salvar(jogador_id, time_destino_id)
+        return redirect(url_for("nova_movimentacao"))
 
+
+    movimentacao = tabela_movimentacao.select_todos()
+    jogadores = tabela_jogador.select_todos_jogadores()
+    times = tabela_time.select_todos_times()
+
+    return render_template("movimentacoes.html", movimentacoes=movimentacao, jogadores=jogadores, times=times, jogador_selecionado=jogador_id)
 
 
 
