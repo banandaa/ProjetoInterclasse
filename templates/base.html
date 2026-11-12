@@ -11,6 +11,7 @@
     <div class="layout">
 
         <!-- MENU VERTICAL -->
+        {% if current_user.id %}
         <nav class="menu-lateral">
             <div class="menu-titulo">🏆 Interclasse</div>
             <ul>
@@ -44,8 +45,14 @@
                        <span class="icone">🔄️</span> Movimentações
                     </a>
                 </li>
+                 <li>
+                    <a href="{{ url_for('logout') }}"
+                       <span class="icone">➡️</span> Sair
+                    </a>
+                </li>
             </ul>
         </nav>
+        {% endif %}
 
         <!-- CONTEÚDO -->
         <main class="conteudo">
