@@ -1,14 +1,12 @@
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
-
 from banco import tabela_time, tabela_jogador, tabela_partida, tabela_movimentacao
 from database import *
 from datetime import date
 from sqlalchemy.exc import SQLAlchemyError
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 
-from database import Movimentacao
 
 app = Flask(__name__)
 # secret_key aqui apenas em momento de criação, em produção deve ser protegida!
@@ -27,7 +25,24 @@ def shutdown_session(exception=None):
 # Carregar informações do usuário logado
 @login_manager.user_loader
 def load_user(user_id):
-    return db_session.get(Movimentacao.Usuario, int(user_id))
+    return db_session.get(Usuario, int(user_id))
+
+def roles_required(*papeis_permitidos):
+    '''
+        Decorator para restringir acesso
+        baseado no papel do usuário logado
+    '''
+
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if current_user.papel not in papeis_permitidos:
+                flash("Acesso negado: você não tem autorização para acessar essa página")
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # Interface de autenticação
 @app.route('/login', methods=["GET", "POST"])
@@ -35,7 +50,7 @@ def login():
     if request.method == "POST":
         email = request.form.get("email")
         senha = request.form.get("senha")
-        usuario_sql = select(Movimentacao.Usuario).where(Movimentacao.Usuario.email == email)
+        usuario_sql = select(Usuario).where(Usuario.email == email)
         usuario_resultado = db_session.execute(usuario_sql).scalar() # usuario_resultado representa a class Usuario
 
         if not usuario_resultado:
@@ -64,14 +79,14 @@ def registro():
             flash("Preencher todos os campos", "error")
             return redirect(url_for("registro"))
 
-        usuario_sql = select(Movimentacao.Usuario).where(Movimentacao.Usuario.email == email)
+        usuario_sql = select(Usuario).where(Usuario.email == email)
         usuario_email = db_session.execute(usuario_sql).scalar_one_or_none()
 
         if usuario_email:
             flash("E-mail já cadastrado", "error")
             return redirect(url_for("registro"))
         try:
-            novo_usuario = Movimentacao.Usuario(
+            novo_usuario = Usuario(
                 nome=nome,
                 email=email
             )
@@ -110,8 +125,7 @@ def dashboard():
         "dashboard.html",
         total_jogadores=jogadores,
         total_times=times,
-        total_partidas=partidas,
-        total_movimetacoes=movimentacoes
+        total_partidas=partidas
     )
 
 @app.route("/jogadores")
@@ -298,8 +312,11 @@ def nova_partida():
     partidas = tabela_partida.select_todas_partidas()
     return render_template("partidas.html", partidas=partidas, times=times)
 
-@app.route("/movimentacao/nova/<int:jogador_id>")
-@app.route("/movimentacao/nova", methods=["GET", "POST"])
+
+
+@app.route("/movimentacao/nova", methods=["GET", "POST"], endpoint="nova_movimentacao")
+@app.route("/movimentacao/nova/<int:jogador_id>", methods=["GET", "POST"], endpoint="nova_movimentacao")
+@roles_required("admin")
 def nova_movimentacao(jogador_id=None):
     if request.method == "POST":
         #1- pegar informações no formulário
